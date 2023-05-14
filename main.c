@@ -1,5 +1,5 @@
 
-//IMPORTAINT: Just go to line 95, the rest isnt your concern; code bricks without printf in file_size(), dunno why
+//IMPORTAINT: Just go to line 103, the rest isnt your concern; code bricks without printf in file_size(), dunno why
 
 #include <stdlib.h>
 #include <stdio.h>
