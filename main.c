@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <limits.h>
 #include <string.h>
+#include <math.h>
+#include <float.h>
 
 //---------------------------bicagis-code-START-----------------------------//
 
@@ -77,12 +79,40 @@ int *array_to_matrix(struct pos *array, int n_nodes, int (*dist)(struct pos, str
 
 int func(struct pos a, struct pos b)
 {
-	return 1;
+	double x = abs(b.x - a.x) - 1, y = b.y - a.y; // calculate the distance Pesho needs to jump
+	if (x == 0) {
+		if (y <= 0) // if it's next to or below
+			return 0;
+		x += 0.0625; // this adds just a bit of differance so that the formula works
+	}
+	const double gravity = 9.80665; // gravity acceleration assuming it's on earth and one grid metric is 1 meter
+	double offset = (M_PI / 2 - atan(y / x)) / 2; // half of the straight angle to the platform
+	double angle = M_PI / 2 - offset, angleUp, angleDown; // angle of the initial jump
+	double gxx2 = gravity * x * x / 2; // going to need this every time I calculate velocity
+	double vmin = sqrt(gxx2 / (x * tan(angle) - y)) / cos(angle), velocityMid, velocityUp, velocityDown; // velocity
+	velocityMid = vmin;
+	for (int i = 0; i < 10; i++) {
+		offset /= 2;
+		angleUp = angle + offset;
+		angleDown = angle - offset;
+		velocityUp = sqrt(gxx2 / (x * tan(angleUp) - y)) / cos (angleUp);
+		velocityDown = sqrt(gxx2 / (x * tan(angleDown) - y)) / cos (angleDown);
+		if (velocityUp > velocityDown) {
+			velocityMid = velocityDown;
+			angle = angleDown;
+		} else {
+			velocityMid = velocityUp;
+			angle = angleUp;
+		}
+		if (vmin > velocityMid)
+			vmin = velocityMid;
+	}
+	return pow(vmin / 3.1305, 2); // 3.1305 is a constant for converting velocity into distance
 }
 
 #define DIST func
 
-void main() // also writtern by bicagis
+void main() // also writtern by bicagis // you wish
 {
 	FILE *map = fopen("map.txt", "r");
 	int width, height, fsize = file_size(map); //remove fsize, its just for the printf bellow n nothing else
