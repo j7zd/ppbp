@@ -1,6 +1,5 @@
 
 //IMPORTAINT: Just go to line 103, the rest isnt your concern; code bricks without printf in file_size(), dunno why
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
@@ -20,8 +19,8 @@ int file_size(FILE *file) // in bytes
 	fseek(file, 0, SEEK_END); // sets file position to EOF
 	int rval = (int)ftell(file); // get file size; we assume the file is smaller than INT_MAX
 	rewind(file); // set file pos to start
-	printf("\n"); //                    FOR SOME REASON THIS PREVENTS A MALLOC ERROR. HOW??? DONT REMOVE IT
-	return rval;
+	printf("\n"); //                    FOR SOME REASON THIS PREVENTS A MALLOC ERROR. HOW??? DONT REMOVE IT // honestly I'm amazed how you broke it so badly that it needs this
+	return rval; 
 }
 
 char* file_to_buffer(FILE *file, int *out_width, int *out_height) // must be a rectangle, else it doesnt work
@@ -83,7 +82,8 @@ int func(struct pos a, struct pos b)
 	if (x == 0) {
 		if (y <= 0) // if it's next to or below
 			return 0;
-		x += 0.0625; // this adds just a bit of differance so that the formula works
+		x += 0.0625; // this adds just a bit of differance so that the formula works when x is 0
+		// it shouldn't be a problem, but if it is just make it even lower (not 0 of course) 
 	}
 	const double gravity = 9.80665; // gravity acceleration assuming it's on earth and one grid metric is 1 meter
 	double offset = (M_PI / 2 - atan(y / x)) / 2; // half of the straight angle to the platform
@@ -91,12 +91,18 @@ int func(struct pos a, struct pos b)
 	double gxx2 = gravity * x * x / 2; // going to need this every time I calculate velocity
 	double vmin = sqrt(gxx2 / (x * tan(angle) - y)) / cos(angle), velocityMid, velocityUp, velocityDown; // velocity
 	velocityMid = vmin;
-	for (int i = 0; i < 10; i++) {
+	// this is a binary search for the minimum velocity
+	// first it calculates the velocity for the upper and lower angle
+	// it compares them and chooses the smaller one
+	// if the smaller one is less than the current smallest it becomes the current smallest
+	for (int i = 0; i < 10; i++) { // currently the resolution is 1/1024 of a degree
+	// it's determined by how long it iterates so just change the 10 to whatever you want (don't forget it needs to fit in a double)
 		offset /= 2;
 		angleUp = angle + offset;
 		angleDown = angle - offset;
-		velocityUp = sqrt(gxx2 / (x * tan(angleUp) - y)) / cos (angleUp);
-		velocityDown = sqrt(gxx2 / (x * tan(angleDown) - y)) / cos (angleDown);
+		velocityUp = sqrt(gxx2 / (x * tan(angleUp) - y)) / cos (angleUp); // this is the formula for calculating the velocity as you saw 10 lines above
+		velocityDown = sqrt(gxx2 / (x * tan(angleDown) - y)) / cos (angleDown); // took me 2 hours and desmos accoount to figure it out
+		// this formula is good and all but it's going to be a nightmare to add air resistance
 		if (velocityUp > velocityDown) {
 			velocityMid = velocityDown;
 			angle = angleDown;
@@ -107,7 +113,7 @@ int func(struct pos a, struct pos b)
 		if (vmin > velocityMid)
 			vmin = velocityMid;
 	}
-	return pow(vmin / 3.1305, 2); // 3.1305 is a constant for converting velocity into distance
+	return pow(vmin / 3.1305, 2); // 3.1305 is a constant for converting velocity into horizontal distance
 }
 
 #define DIST func
