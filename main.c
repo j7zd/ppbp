@@ -113,7 +113,9 @@ int func(struct pos a, struct pos b)
 		if (vmin > velocityMid)
 			vmin = velocityMid;
 	}
-	return pow(vmin / 3.1305, 2); // 3.1305 is a constant for converting velocity into horizontal distance
+	return pow(vmin / 3.13156, 2); // 3.13156 is a constant for converting velocity into horizontal distance with gravity acceleration 9.80665
+	// It's solely dependant on the gravity acceleration but I don't know how to calculate it
+	// also for gravity acceleration 9.8 (rounded) it's 3.1305, cheers
 }
 
 #define DIST func
