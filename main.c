@@ -1,4 +1,3 @@
-
 //IMPORTAINT: Just go to line 103, the rest isnt your concern; code bricks without printf in file_size(), dunno why
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,7 +18,6 @@ int file_size(FILE *file) // in bytes
 	fseek(file, 0, SEEK_END); // sets file position to EOF
 	int rval = (int)ftell(file); // get file size; we assume the file is smaller than INT_MAX
 	rewind(file); // set file pos to start
-	printf("\n"); //                    FOR SOME REASON THIS PREVENTS A MALLOC ERROR. HOW??? DONT REMOVE IT // honestly I'm amazed how you broke it so badly that it needs this
 	return rval; 
 }
 
@@ -63,7 +61,7 @@ struct pos *buffer_to_array(char* buffer, int width, int height, int *out_n_node
 // matrix[y * n_nodes + x] is element (x,y)
 int *array_to_matrix(struct pos *array, int n_nodes, int (*dist)(struct pos, struct pos)) // could be short to save mem but nah; takes a distance function, self explanatory
 {
-	int *matrix = malloc(n_nodes * n_nodes * sizeof(matrix));
+	int *matrix = malloc(n_nodes * n_nodes * sizeof(*matrix));
 	for(int i = 0; i < n_nodes; i++)
 	{
 		for(int j = 0; j < n_nodes; j++)
@@ -130,12 +128,12 @@ void main() // also writtern by bicagis // you wish
 	int *matrix = array_to_matrix(array, n_nodes, &DIST); // DIST - your distance function of choice, placeholder code
 	free(array);
 
-	//printf("file size: %d\n", fsize);
+	printf("file size: %d\n", fsize);
 	printf("width, height: %d,%d\n", width, height);
 	printf("number of #'s: %d\n", n_nodes);
 	if(n_nodes > 1)
 		printf("dist from 1st to 2nd #: %d\n", matrix[1 * n_nodes + 2]);
 
 	// only thing that you care about is matrix and n_nodes beyond this point, that and DIST, also array_to_matrix() comment
-
+	free(matrix);
 }
