@@ -63,7 +63,7 @@ struct pos *buffer_to_array(char* buffer, int width, int height, int *out_n_node
 // matrix[y * n_nodes + x] is element (x,y)
 int *array_to_matrix(struct pos *array, int n_nodes, int (*dist)(struct pos, struct pos), struct pos start_pos, int *start_vertex) // could be short to save mem but nah; takes a distance function, self explanatory
 {
-	int *matrix = malloc(sizeof(int) * n_nodes * n_nodes);
+	int *matrix = malloc(n_nodes * n_nodes);
 	for(int i = 0; i < n_nodes; i++)
 	{
 		if (array[i].x == start_pos.x && array[i].y == start_pos.y)
@@ -218,5 +218,8 @@ void main() // also writtern by bicagis // you wish
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++)
 			printf("%c", buffer[i * width + j]);
-	}
+	}	
+	free(matrix);
+	free(array);
+	free(buffer);
 }
