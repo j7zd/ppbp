@@ -1,4 +1,3 @@
-
 //IMPORTAINT: Just go to line 103, the rest isnt your concern; code bricks without printf in file_size(), dunno why
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,13 +20,12 @@ int file_size(FILE *file) // in bytes
 	fseek(file, 0, SEEK_END); // sets file position to EOF
 	int rval = (int)ftell(file); // get file size; we assume the file is smaller than INT_MAX
 	rewind(file); // set file pos to start
-	printf("\n"); //                    FOR SOME REASON THIS PREVENTS A MALLOC ERROR. HOW??? DONT REMOVE IT // honestly I'm amazed how you broke it so badly that it needs this
 	return rval; 
 }
 
 char* file_to_buffer(FILE *file, int *out_width, int *out_height) // must be a rectangle, else it doesnt work
 {
-	char *buffer = malloc(file_size(file));
+	char *buffer = malloc(file_size(file) + 1);
 
 	fgets(buffer, INT_MAX, file); // get first row
 	*out_width = strlen(buffer);
@@ -65,7 +63,7 @@ struct pos *buffer_to_array(char* buffer, int width, int height, int *out_n_node
 // matrix[y * n_nodes + x] is element (x,y)
 int *array_to_matrix(struct pos *array, int n_nodes, int (*dist)(struct pos, struct pos), struct pos start_pos, int *start_vertex) // could be short to save mem but nah; takes a distance function, self explanatory
 {
-	int *matrix = malloc(n_nodes * n_nodes);
+	int *matrix = malloc(sizeof(int) * n_nodes * n_nodes);
 	for(int i = 0; i < n_nodes; i++)
 	{
 		if (array[i].x == start_pos.x && array[i].y == start_pos.y)
