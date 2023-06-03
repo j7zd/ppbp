@@ -7,6 +7,8 @@
 #include <math.h>
 #include <float.h>
 
+#define max(a, b) (a > b ? a : b)
+
 //---------------------------bicagis-code-START-----------------------------//
 
 struct pos
@@ -61,11 +63,13 @@ struct pos *buffer_to_array(char* buffer, int width, int height, int *out_n_node
 }
 
 // matrix[y * n_nodes + x] is element (x,y)
-int *array_to_matrix(struct pos *array, int n_nodes, int (*dist)(struct pos, struct pos)) // could be short to save mem but nah; takes a distance function, self explanatory
+int *array_to_matrix(struct pos *array, int n_nodes, int (*dist)(struct pos, struct pos), struct pos start_pos, int *start_vertex) // could be short to save mem but nah; takes a distance function, self explanatory
 {
 	int *matrix = malloc(n_nodes * n_nodes);
 	for(int i = 0; i < n_nodes; i++)
 	{
+		if (array[i].x == start_pos.x && array[i].y == start_pos.y)
+			*start_vertex = i;
 		for(int j = 0; j < n_nodes; j++)
 		{
 			matrix[i * n_nodes + j] = (*dist)(array[i], array[j]); // takes the dist of the ith and the jth elements and writes it in matrix[i][j]
@@ -113,31 +117,108 @@ int func(struct pos a, struct pos b)
 		if (vmin > velocityMid)
 			vmin = velocityMid;
 	}
-	return pow(vmin / 3.13156, 2); // 3.13156 is a constant for converting velocity into horizontal distance with gravity acceleration 9.80665
+	//     vvvv - rounding up because I'm returning an integer
+	return ceil(pow(vmin / 3.13156, 2)); // 3.13156 is a constant for converting velocity into horizontal distance with gravity acceleration 9.80665
 	// It's solely dependant on the gravity acceleration but I don't know how to calculate it
 	// also for gravity acceleration 9.8 (rounded) it's 3.1305, cheers
 }
 
 #define DIST func
 
+void bfs(int *matrix, int n_nodes, int start_vertex, int *requiredToReach) 
+{
+	for (int i = 0; i < n_nodes; i++) {
+		if (i == start_vertex)
+			continue;
+		
+		if (requiredToReach[i] > max(requiredToReach[start_vertex], matrix[start_vertex * n_nodes + i])) {
+			requiredToReach[i] = max(requiredToReach[start_vertex], matrix[start_vertex * n_nodes + i]);
+			bfs(matrix, n_nodes, i, requiredToReach);
+		}
+	}
+}
+
+int pathFinder(char *map, int width, int height, int start_vertex, int destination, int *matrix, int n_nodes, struct pos *array, int *visited, int pesho)
+{
+	if (start_vertex == destination)
+	{
+		map[array[start_vertex].y * width + array[start_vertex].x] = 'X';
+		return 1;
+	}
+	for (int i = 0; i < n_nodes; i++) {
+		if (visited[i] == 0 && matrix[start_vertex * n_nodes + i] <= pesho) {
+			visited[i] = 1;
+			if (pathFinder(map, width, height, i, destination, matrix, n_nodes, array, visited, pesho)) {
+				map[array[start_vertex].y * width + array[start_vertex].x] = 'X';
+				return 1;
+			}
+		}
+	}
+	return 0;		
+}
+
 void main() // also writtern by bicagis // you wish
 {
-	FILE *map = fopen("map.txt", "r");
+	char ipath[256];
+	printf("Enter path to map.txt: ");
+	scanf("%s", ipath);
+	FILE *map = fopen(ipath, "r");
 	int width, height, fsize = file_size(map); //remove fsize, its just for the printf bellow n nothing else
 	char *buffer = file_to_buffer(map, &width, &height);
 	fclose(map);
 	int n_nodes;
 	struct pos *array = buffer_to_array(buffer, width, height, &n_nodes);
-	free(buffer);
-	int *matrix = array_to_matrix(array, n_nodes, &DIST); // DIST - your distance function of choice, placeholder code
-	free(array);
+//	free(buffer); // NOOO, don't take the buffer away from me, I need it
+	int start_vertex;
+	struct pos start_pos = {0, 0}; // added these so that I know where the start is
+	scanf("%d %d", &start_pos.x, &start_pos.y);
+	int *matrix = array_to_matrix(array, n_nodes, &DIST, start_pos, &start_vertex); // DIST - your distance function of choice, placeholder code
+//	free(array); // NOOO, don't take the array away from me, I need it
 
 	//printf("file size: %d\n", fsize);
-	printf("width, height: %d,%d\n", width, height);
-	printf("number of #'s: %d\n", n_nodes);
-	if(n_nodes > 1)
-		printf("dist from 1st to 2nd #: %d\n", matrix[1 * n_nodes + 2]);
+	//printf("width, height: %d,%d\n", width, height);
+	//printf("number of #'s: %d\n", n_nodes);
+	//if(n_nodes > 1)
+	//	printf("dist from 1st to 2nd #: %d\n", matrix[1 * n_nodes + 2]);
 
 	// only thing that you care about is matrix and n_nodes beyond this point, that and DIST, also array_to_matrix() comment
-
+	int *requiredToReach = malloc(n_nodes * sizeof(int)), pesho, policeman, max = 0, n_policemen;
+	for (int i = 0; i < n_nodes; i++) {
+		requiredToReach[i] = INT_MAX;
+	}
+	requiredToReach[start_vertex] = 0;
+	scanf("%d", &pesho);
+	scanf("%d", &n_policemen);
+	for (int i = 0; i < n_policemen; i++) {
+		scanf("%d", &policeman);
+		if (policeman > max)
+			max = policeman;
+	}
+	bfs(matrix, n_nodes, start_vertex, requiredToReach);
+	if (max >= pesho)
+	{
+		printf("IMPOSSIBLE");
+		return;
+	}
+	int destination = -1;
+	for (int i = 0; i < n_nodes; i++) {
+		if (requiredToReach[i] <= pesho && requiredToReach[i] > max) {
+			destination = i;
+			break;
+		}
+	}
+	if (destination == -1) {
+		printf("IMPOSSIBLE");
+		return;
+	}
+	int *visited = malloc(n_nodes * sizeof(int));
+	for (int i = 0; i < n_nodes; i++) {
+		visited[i] = 0;
+	}
+	visited[start_vertex] = 1;
+	pathFinder(buffer, width, height, start_vertex, destination, matrix, n_nodes, array, visited, pesho);
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++)
+			printf("%c", buffer[i * width + j]);
+	}
 }
