@@ -25,7 +25,7 @@ int file_size(FILE *file) // in bytes
 
 char* file_to_buffer(FILE *file, int *out_width, int *out_height) // must be a rectangle, else it doesnt work
 {
-	char *buffer = malloc(file_size(file));
+	char *buffer = malloc(file_size(file) + 1);
 
 	fgets(buffer, INT_MAX, file); // get first row
 	*out_width = strlen(buffer);
@@ -63,7 +63,7 @@ struct pos *buffer_to_array(char* buffer, int width, int height, int *out_n_node
 // matrix[y * n_nodes + x] is element (x,y)
 int *array_to_matrix(struct pos *array, int n_nodes, int (*dist)(struct pos, struct pos)) // could be short to save mem but nah; takes a distance function, self explanatory
 {
-	int *matrix = malloc(n_nodes * n_nodes);
+	int *matrix = malloc(n_nodes * n_nodes * sizeof(matrix));
 	for(int i = 0; i < n_nodes; i++)
 	{
 		for(int j = 0; j < n_nodes; j++)
