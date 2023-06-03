@@ -1,10 +1,4 @@
-
-
-main: main.o
-	gcc $^ -o $@
-
-main.o: main.c
-	gcc -c $<
-
+main: main.c
+	gcc $^ -lm -g -o $@
 clean:
 	rm *.o
