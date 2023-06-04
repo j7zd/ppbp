@@ -171,11 +171,43 @@ int pathFinder(char *map, int width, int height, int start_vertex, int destinati
 	return 0;
 }
 
-void kill(char *buffer, struct pos *array, int *matrix)
+void kill(char *buffer, struct pos *array, int *matrix) // should rename to murder
 {
 	free(buffer);
 	free(array);
 	free(matrix);
+}
+
+int n_digits(int n)
+{
+	return floor(log10(n) + 1);
+}
+
+void draw_map(const char *map, int width, int height)
+{
+	width--;
+	int wn_digits = n_digits(width-1), hn_digits = n_digits(height-1);
+	for (int i = pow(10, wn_digits - 1); i; i/=10) {
+		// for (int j = 0; j < hn_digits; j++)
+		// 	printf(" ");
+		printf("0");
+		for (int j = 1; j < width; j++) {
+			if (j / i == 0)
+			{
+				printf(" ");
+				continue;
+			}
+			printf("%d", (j / i) % 10);
+		}
+		printf("\n");
+	}
+	width++;
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width - 1; x++)
+			printf("%c", map[y * width + x]);
+		printf("%d\n", y);
+	}
 }
 
 int main() // also writtern by bicagis // you wish
@@ -192,13 +224,28 @@ int main() // also writtern by bicagis // you wish
 //	free(buffer); // NOOO, don't take the buffer away from me, I need it
 	int start_vertex = -1;
 	struct pos start_pos = {0, 0}; // added these so that I know where the start is
-	printf("Enter Pesho's position (x,y): ");
+	
+	// this is just for the looks
+	printf("\n"); 
+	draw_map(buffer, width, height); 
+	printf("Show coordinates? (y/n): "); 
+	char c; 
+	scanf(" %c", &c); 
+	if (c == 'y') 
+	{ 
+		for (int i = 0; i < n_nodes; i++) 
+		{ 
+			printf("%d: (%d,%d)\n", i, array[i].x, array[i].y); 
+		} 
+	} 
+	
+	printf("\nEnter Pesho's position (x,y): ");
 	scanf("%d %d", &start_pos.x, &start_pos.y);
 	int *matrix = array_to_matrix(array, n_nodes, &DIST, start_pos, &start_vertex); // DIST - your distance function of choice, placeholder
 //	free(array); // NOOO, don't take the array away from me, I need it
 	if(start_vertex == -1)
 	{
-		printf("Pesho wasn't on a platform and fell to his death\n");
+		printf("Pesho wasn't on a platform and fell to his death\n"); // :(  // the policemen also died, but the number of casulties is unknown since we haven't got to that part of the code yet
 		kill(buffer, array, matrix);
 		return 1;
 	}
@@ -209,6 +256,9 @@ int main() // also writtern by bicagis // you wish
 //		printf("dist from 1st to 2nd #: %d\n", matrix[1 * n_nodes + 2]);
 
 	// only thing that you care about is matrix and n_nodes beyond this point, that and DIST, also array_to_matrix() comment
+// the following code worked on the second try 
+// very proud of that
+// at least I hope it does, I haven't tested it enough
 	int *requiredToReach = malloc(n_nodes * sizeof(int)), pesho, policeman, max = 0, n_policemen;
 	for (int i = 0; i < n_nodes; i++)
 	{
@@ -222,14 +272,14 @@ int main() // also writtern by bicagis // you wish
 	printf("For each policeman, enter jump distance: ");
 	for (int i = 0; i < n_policemen; i++)
 	{
-		scanf("%d", &policeman);
-		if (policeman > max)
-			max = policeman;
+		scanf("%d", &policeman); // this whole thing is   p o i n t l e s s
+		if (policeman > max) // 39 buried
+			max = policeman; // 0 found
 	}
 	bfs(matrix, n_nodes, start_vertex, requiredToReach);
 	if (max >= pesho)
 	{
-		printf("IMPOSSIBLE, Pesho can jump less than the police\n");
+		printf("IMPOSSIBLE, Pesho can jump less than the police\n"); // :(
 		kill(buffer, array, matrix);
 		return 1;
 	}
@@ -244,9 +294,9 @@ int main() // also writtern by bicagis // you wish
 	}
 	if (destination == -1)
 	{
-		printf("IMPOSSIBLE, Pesho has no place to hide\n");
+		printf("IMPOSSIBLE, Pesho has no place to hide\n"); // :(
 		kill(buffer, array, matrix);
-		return 1;
+		return 0;
 	}
 	int *visited = malloc(n_nodes * sizeof(int));
 	for (int i = 0; i < n_nodes; i++)
@@ -262,7 +312,28 @@ int main() // also writtern by bicagis // you wish
 			printf("%c", buffer[y * width + x]);
 	}
 	printf("\n");
-	printf("PESHO ESCAPES AGAIN!\n");
+	printf("PESHO ESCAPES AGAIN!\n"); // :)
+//  ⠀⠀⠀⡯⡯⡾⠝⠘⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢊⠘⡮⣣⠪⠢⡑⡌
+//  ⠀⠀⠀⠟⠝⠈⠀⠀⠀⠡⠀⠠⢈⠠⢐⢠⢂⢔⣐⢄⡂⢔⠀⡁⢉⠸⢨⢑⠕⡌
+//  ⠀⠀⡀⠁⠀⠀⠀⡀⢂⠡⠈⡔⣕⢮⣳⢯⣿⣻⣟⣯⣯⢷⣫⣆⡂⠀⠀⢐⠑⡌
+//  ⢀⠠⠐⠈⠀⢀⢂⠢⡂⠕⡁⣝⢮⣳⢽⡽⣾⣻⣿⣯⡯⣟⣞⢾⢜⢆⠀⡀⠀⠪
+//  ⣬⠂⠀⠀⢀⢂⢪⠨⢂⠥⣺⡪⣗⢗⣽⢽⡯⣿⣽⣷⢿⡽⡾⡽⣝⢎⠀⠀⠀⢡
+//  ⣿⠀⠀⠀⢂⠢⢂⢥⢱⡹⣪⢞⡵⣻⡪⡯⡯⣟⡾⣿⣻⡽⣯⡻⣪⠧⠑⠀⠁⢐
+//  ⣿⠀⠀⠀⠢⢑⠠⠑⠕⡝⡎⡗⡝⡎⣞⢽⡹⣕⢯⢻⠹⡹⢚⠝⡷⡽⡨⠀⠀⢔
+//  ⣿⡯⠀⢈⠈⢄⠂⠂⠐⠀⠌⠠⢑⠱⡱⡱⡑⢔⠁⠀⡀⠐⠐⠐⡡⡹⣪⠀⠀⢘
+//  ⣿⣽⠀⡀⡊⠀⠐⠨⠈⡁⠂⢈⠠⡱⡽⣷⡑⠁⠠⠑⠀⢉⢇⣤⢘⣪⢽⠀⢌⢎
+//  ⣿⢾⠀⢌⠌⠀⡁⠢⠂⠐⡀⠀⢀⢳⢽⣽⡺⣨⢄⣑⢉⢃⢭⡲⣕⡭⣹⠠⢐⢗
+//  ⣿⡗⠀⠢⠡⡱⡸⣔⢵⢱⢸⠈⠀⡪⣳⣳⢹⢜⡵⣱⢱⡱⣳⡹⣵⣻⢔⢅⢬⡷
+//  ⣷⡇⡂⠡⡑⢕⢕⠕⡑⠡⢂⢊⢐⢕⡝⡮⡧⡳⣝⢴⡐⣁⠃⡫⡒⣕⢏⡮⣷⡟
+//  ⣷⣻⣅⠑⢌⠢⠁⢐⠠⠑⡐⠐⠌⡪⠮⡫⠪⡪⡪⣺⢸⠰⠡⠠⠐⢱⠨⡪⡪⡰
+//  ⣯⢷⣟⣇⡂⡂⡌⡀⠀⠁⡂⠅⠂⠀⡑⡄⢇⠇⢝⡨⡠⡁⢐⠠⢀⢪⡐⡜⡪⡊
+//  ⣿⢽⡾⢹⡄⠕⡅⢇⠂⠑⣴⡬⣬⣬⣆⢮⣦⣷⣵⣷⡗⢃⢮⠱⡸⢰⢱⢸⢨⢌
+//  ⣯⢯⣟⠸⣳⡅⠜⠔⡌⡐⠈⠻⠟⣿⢿⣿⣿⠿⡻⣃⠢⣱⡳⡱⡩⢢⠣⡃⠢⠁
+//  ⡯⣟⣞⡇⡿⣽⡪⡘⡰⠨⢐⢀⠢⢢⢄⢤⣰⠼⡾⢕⢕⡵⣝⠎⢌⢪⠪⡘⡌⠀
+//  ⡯⣳⠯⠚⢊⠡⡂⢂⠨⠊⠔⡑⠬⡸⣘⢬⢪⣪⡺⡼⣕⢯⢞⢕⢝⠎⢻⢼⣀⠀
+//  ⠁⡂⠔⡁⡢⠣⢀⠢⠀⠅⠱⡐⡱⡘⡔⡕⡕⣲⡹⣎⡮⡏⡑⢜⢼⡱⢩⣗⣯⣟
+//  ⢀⢂⢑⠀⡂⡃⠅⠊⢄⢑⠠⠑⢕⢕⢝⢮⢺⢕⢟⢮⢊⢢⢱⢄⠃⣇⣞⢞⣞⢾
+//  ⢀⠢⡑⡀⢂⢊⠠⠁⡂⡐⠀⠅⡈⠪⠪⠪⠣⠫⠑⡁⢔⠕⣜⣜⢦⡰⡎⡯⡾⡽
 	kill(buffer, array, matrix);
 	return 0;
 }
