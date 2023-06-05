@@ -67,6 +67,9 @@ struct pos *buffer_to_array(char* buffer, int width, int height, int *out_n_node
 // matrix of node-to-node distances
 // matrix[a * n_nodes + b] is dist from a to b
 // takes a distance function
+
+// VERY IMPORTANT
+// MATRIX IS DIRECTIONAL AND IS FROM A TO B
 int *array_to_matrix(struct pos *array, int n_nodes, int (*dist)(struct pos, struct pos), struct pos start_pos, int *start_vertex)
 {
 	int *matrix = malloc(n_nodes * n_nodes * sizeof(int)); // could use short to save mem but nah
@@ -86,12 +89,13 @@ int *array_to_matrix(struct pos *array, int n_nodes, int (*dist)(struct pos, str
 
 int func(struct pos a, struct pos b)
 {
-	double x = abs(b.x - a.x) - 1, y = b.y - a.y; // calculate the distance Pesho needs to jump
-	if (x == 0)
+	double x = abs(b.x - a.x) - 1, y = a.y - b.y; // calculate the distance Pesho needs to jump
+	
+	if (x <= 0)
 	{
 		if (y <= 0) // if it's next to or below
 			return 0;
-		x += 0.0625; // this adds just a bit of differance so that the formula works when x is 0
+		x = 0.0625; // this adds just a bit of differance so that the formula works when x is 0
 		// it shouldn't be a problem, but if it is just make it even lower (not 0 of course) 
 	}
 	const double gravity = 9.80665; // gravity acceleration assuming it's on earth and one grid metric is 1 meter
@@ -133,20 +137,6 @@ int func(struct pos a, struct pos b)
 
 #define DIST func
 
-void bfs(int *matrix, int n_nodes, int start_vertex, int *requiredToReach)
-{
-	for (int i = 0; i < n_nodes; i++)
-	{
-		if (i == start_vertex)
-			continue;
-		if (requiredToReach[i] > max(requiredToReach[start_vertex], matrix[start_vertex * n_nodes + i]))
-		{
-			requiredToReach[i] = max(requiredToReach[start_vertex], matrix[start_vertex * n_nodes + i]);
-			bfs(matrix, n_nodes, i, requiredToReach);
-		}
-	}
-}
-
 int pathFinder(char *map, int width, int height, int start_vertex, int destination, int *matrix, int n_nodes, struct pos *array, int *visited, int pesho)
 {
 	if (start_vertex == destination)
@@ -167,6 +157,20 @@ int pathFinder(char *map, int width, int height, int start_vertex, int destinati
 		}
 	}
 	return 0;
+}
+
+int dfs(int *matrix, int n_nodes, int start_vertex, int *requiredToReach) 
+{
+	for (int i = 0; i < n_nodes; i++)
+	{
+		if (i == start_vertex)
+			continue;
+		if (requiredToReach[i] > max(requiredToReach[start_vertex], matrix[start_vertex * n_nodes + i]))
+		{
+			requiredToReach[i] = max(requiredToReach[start_vertex], matrix[start_vertex * n_nodes + i]);
+			dfs(matrix, n_nodes, i, requiredToReach);
+		}
+	}
 }
 
 void kill(char *buffer, struct pos *array, int *matrix) // should rename to murder
@@ -274,7 +278,8 @@ int main() // also writtern by bicagis // you wish
 		if (policeman > max) // 39 buried
 			max = policeman; // 0 found
 	}
-	bfs(matrix, n_nodes, start_vertex, requiredToReach);
+
+	dfs(matrix, n_nodes, start_vertex, requiredToReach);
 	if (max >= pesho)
 	{
 		printf("IMPOSSIBLE, Pesho can jump less than the police\n"); // :(
@@ -303,11 +308,14 @@ int main() // also writtern by bicagis // you wish
 	}
 	visited[start_vertex] = 1;
 	pathFinder(buffer, width, height, start_vertex, destination, matrix, n_nodes, array, visited, pesho);
+
 	printf("\n");
 	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
+		{
 			printf("%c", buffer[y * width + x]);
+		}
 	}
 	printf("\n");
 	printf("PESHO ESCAPES AGAIN!\n"); // :)
