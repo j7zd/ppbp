@@ -74,11 +74,9 @@ int *array_to_matrix(struct pos *array, int n_nodes, int (*dist)(struct pos, str
 	{
 		if (array[i].x == start_pos.x && array[i].y == start_pos.y) // saves starting node index
 			*start_vertex = i;
-		for(int j = i; j < n_nodes; j++)
+		for(int j = 0; j < n_nodes; j++)
 		{
-			int dist_ij = (*dist)(array[i], array[j]); // takes the dist from the ith to the jth elements and writes it in matrix[i][j] and [j][i]
-			matrix[i * n_nodes + j] = dist_ij;
-			matrix[j * n_nodes + i] = dist_ij;
+			matrix[i * n_nodes + j] = (*dist)(array[i], array[j]); // takes the dist from the ith to the jth elements and writes it in matrix[i][j]
 		}
 	}
 	return matrix;
