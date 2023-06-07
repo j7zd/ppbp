@@ -70,7 +70,7 @@ struct pos *buffer_to_array(char* buffer, int width, int height, int *out_n_node
 
 // VERY IMPORTANT
 // MATRIX IS DIRECTIONAL AND IS FROM A TO B
-int *array_to_matrix(struct pos *array, int n_nodes, int (*dist)(struct pos, struct pos), struct pos start_pos, int *start_vertex)
+int *array_to_matrix(struct pos *array, int n_nodes, int (*dist)(struct pos, struct pos, char *heatmap, int width, int height), struct pos start_pos, int *start_vertex, char *heatmap, int width, int height)
 {
 	int *matrix = malloc(n_nodes * n_nodes * sizeof(int)); // could use short to save mem but nah
 	for(int i = 0; i < n_nodes; i++)
@@ -79,7 +79,7 @@ int *array_to_matrix(struct pos *array, int n_nodes, int (*dist)(struct pos, str
 			*start_vertex = i;
 		for(int j = 0; j < n_nodes; j++)
 		{
-			matrix[i * n_nodes + j] = (*dist)(array[i], array[j]); // takes the dist from the ith to the jth elements and writes it in matrix[i][j]
+			matrix[i * n_nodes + j] = (*dist)(array[i], array[j], heatmap, width, height); // takes the dist from the ith to the jth elements and writes it in matrix[i][j]
 		}
 	}
 	return matrix;
@@ -87,7 +87,7 @@ int *array_to_matrix(struct pos *array, int n_nodes, int (*dist)(struct pos, str
 
 //---------------------------bicagis-code-END-----------------------------//
 
-int func(struct pos a, struct pos b)
+int func(struct pos a, struct pos b, char *heatmap, int width, int height)
 {
 	double x = abs(b.x - a.x) - 1, y = a.y - b.y; // calculate the distance Pesho needs to jump
 	
@@ -98,6 +98,9 @@ int func(struct pos a, struct pos b)
 		x = 0.0625; // this adds just a bit of differance so that the formula works when x is 0
 		// it shouldn't be a problem, but if it is just make it even lower (not 0 of course) 
 	}
+	if (x + 1 < width && y <= height / 2 && y >= height / -2) 
+		return heatmap[(int)(height / 2 - y) * width + (int)(x + 1)] - '0'; // if it's in the heatmap, return the value from the heatmap
+
 	const double gravity = 9.80665; // gravity acceleration assuming it's on earth and one grid metric is 1 meter
 	double offset = (M_PI / 2 - atan(y / x)) / 2; // half of the straight angle to the platform
 	double angle = M_PI / 2 - offset, angleUp, angleDown; // angle of the initial jump
@@ -243,7 +246,11 @@ int main() // also writtern by bicagis // you wish
 	
 	printf("\nEnter Pesho's position (x,y): ");
 	scanf("%d %d", &start_pos.x, &start_pos.y);
-	int *matrix = array_to_matrix(array, n_nodes, &DIST, start_pos, &start_vertex); // DIST - your distance function of choice, placeholder
+	FILE *heatmap = fopen("heatmap.txt", "r");
+	int h_width, h_height;
+	char *heatmap_buffer = file_to_buffer(heatmap, &h_width, &h_height);
+	fclose(heatmap);
+	int *matrix = array_to_matrix(array, n_nodes, &DIST, start_pos, &start_vertex, heatmap_buffer, h_width, h_height); // DIST - your distance function of choice, placeholder
 //	free(array); // NOOO, don't take the array away from me, I need it
 	if(start_vertex == -1)
 	{
