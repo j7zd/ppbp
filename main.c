@@ -88,7 +88,7 @@ int *array_to_matrix(struct pos *array, int n_nodes, int (*dist)(struct pos, str
 
 //---------------------------bicagis-code-END-----------------------------//
 
-int func(struct pos a, struct pos b, char *heatmap, int width, int height)
+int distance(struct pos a, struct pos b, char *heatmap, int width, int height)
 {
 	double x = abs(b.x - a.x) - 1, y = a.y - b.y; // calculate the distance Pesho needs to jump
 	
@@ -139,7 +139,7 @@ int func(struct pos a, struct pos b, char *heatmap, int width, int height)
 	// also for gravity acceleration 9.8 (rounded) it's 3.1305, cheers
 }
 
-#define DIST func
+#define DIST distance
 
 int pathFinder(char *map, int width, int height, int start_vertex, int destination, int *matrix, int n_nodes, struct pos *array, int *visited, int pesho)
 {
