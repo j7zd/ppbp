@@ -218,6 +218,7 @@ void draw_map(const char *map, int width, int height)
 
 int main() // also writtern by bicagis // you wish
 {
+	// reading from file and making conversions //
 	char ipath[256];
 	printf("Enter path to map.txt: ");
 	scanf("%s", ipath);
@@ -245,6 +246,7 @@ int main() // also writtern by bicagis // you wish
 		} 
 	} 
 	
+	// we get the starting position and then we make the matrix //
 	printf("\nEnter Pesho's position (x,y): ");
 	scanf("%d %d", &start_pos.x, &start_pos.y);
 	FILE *heatmap = fopen("heatmap.txt", "r");
@@ -259,22 +261,17 @@ int main() // also writtern by bicagis // you wish
 		kill(buffer, array, matrix);
 		return 1;
 	}
-//	printf("file size: %d\n", fsize);
-//	printf("width, height: %d,%d\n", width, height);
-//	printf("number of #'s: %d\n", n_nodes);
-//	if(n_nodes > 1)
-//		printf("dist from 1st to 2nd #: %d\n", matrix[1 * n_nodes + 2]);
 
-	// only thing that you care about is matrix and n_nodes beyond this point, that and DIST, also array_to_matrix() comment
-// the following code worked on the second try 
-// very proud of that
-// at least I hope it does, I haven't tested it enough
+	// we get the requiredToReach array //
 	int *requiredToReach = malloc(n_nodes * sizeof(int)), pesho, policeman, max = 0, n_policemen;
 	for (int i = 0; i < n_nodes; i++)
 	{
 		requiredToReach[i] = INT_MAX;
 	}
 	requiredToReach[start_vertex] = 0;
+	dfs(matrix, n_nodes, start_vertex, requiredToReach);
+
+	// we get how far Pesho and the policemen can jump //
 	printf("Enter Pesho's horizontal jump distance: ");
 	scanf("%d", &pesho);
 	printf("Enter # of policemen: ");
@@ -286,14 +283,14 @@ int main() // also writtern by bicagis // you wish
 		if (policeman > max) // 39 buried
 			max = policeman; // 0 found
 	}
-
-	dfs(matrix, n_nodes, start_vertex, requiredToReach);
-	if (max >= pesho)
+	if (max >= pesho) // check if Pesho can jump further than the policemen
 	{
 		printf("IMPOSSIBLE, Pesho can jump less than the police\n"); // :(
 		kill(buffer, array, matrix);
 		return 1;
 	}
+
+	// we find a safe space for Pesho to hide //
 	int destination = -1;
 	for (int i = 0; i < n_nodes; i++)
 	{
@@ -303,20 +300,24 @@ int main() // also writtern by bicagis // you wish
 			break;
 		}
 	}
-	if (destination == -1)
+	if (destination == -1) // if there is none
 	{
 		printf("IMPOSSIBLE, Pesho has no place to hide\n"); // :(
 		kill(buffer, array, matrix);
 		return 0;
 	}
+
+	// we find the path to the safe space //
 	int *visited = malloc(n_nodes * sizeof(int));
 	for (int i = 0; i < n_nodes; i++)
 	{
 		visited[i] = 0;
 	}
 	visited[start_vertex] = 1;
-	pathFinder(buffer, width, height, start_vertex, destination, matrix, n_nodes, array, visited, pesho);
+	// pathFinder() if recursive, so when it finds a path to the destination it eddits buffer on every step it took to get there
+	pathFinder(buffer, width, height, start_vertex, destination, matrix, n_nodes, array, visited, pesho); 
 
+	// finally show the path and free the memory //
 	printf("\n");
 	for (int y = 0; y < height; y++)
 	{
@@ -327,6 +328,7 @@ int main() // also writtern by bicagis // you wish
 	}
 	printf("\n");
 	printf("PESHO ESCAPES AGAIN!\n"); // :)
+
 //  ⠀⠀⠀⡯⡯⡾⠝⠘⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢊⠘⡮⣣⠪⠢⡑⡌
 //  ⠀⠀⠀⠟⠝⠈⠀⠀⠀⠡⠀⠠⢈⠠⢐⢠⢂⢔⣐⢄⡂⢔⠀⡁⢉⠸⢨⢑⠕⡌
 //  ⠀⠀⡀⠁⠀⠀⠀⡀⢂⠡⠈⡔⣕⢮⣳⢯⣿⣻⣟⣯⣯⢷⣫⣆⡂⠀⠀⢐⠑⡌
@@ -348,6 +350,7 @@ int main() // also writtern by bicagis // you wish
 //  ⠁⡂⠔⡁⡢⠣⢀⠢⠀⠅⠱⡐⡱⡘⡔⡕⡕⣲⡹⣎⡮⡏⡑⢜⢼⡱⢩⣗⣯⣟
 //  ⢀⢂⢑⠀⡂⡃⠅⠊⢄⢑⠠⠑⢕⢕⢝⢮⢺⢕⢟⢮⢊⢢⢱⢄⠃⣇⣞⢞⣞⢾
 //  ⢀⠢⡑⡀⢂⢊⠠⠁⡂⡐⠀⠅⡈⠪⠪⠪⠣⠫⠑⡁⢔⠕⣜⣜⢦⡰⡎⡯⡾⡽
+
 	kill(buffer, array, matrix);
 	return 0;
 }
