@@ -58,8 +58,9 @@ struct pos *buffer_to_array(char* buffer, int width, int height, int *out_n_node
 			}
 		}
 	}
-	array[n_nodes].x = INT_MAX; // terminates the array
-	array[n_nodes].y = INT_MAX;
+	struct pos *tmp = realloc(array, n_nodes * sizeof(struct pos));
+	if(tmp != NULL)
+		array = tmp;
 	*out_n_nodes = n_nodes;
 	return array;
 }
